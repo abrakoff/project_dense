@@ -1,43 +1,62 @@
 #include "SMPWM01C.h"
 
 SMPWM01C::SMPWM01C() {}
-
-float SMPWM01C::ConcentrationPM02;
-float SMPWM01C::ConcentrationPM10;
-
-unsigned long LPODuration;
-unsigned long SampleStartTime;
-unsigned long SampleDuration;	//duration of sampling in milliseconds
-unsigned long LPOTotal;
-float LPORatio;
 		
-void SMPWM01C::begin(uint8_t P1_Pin_Select, uint8_t P2_Pin_Select) 
+void SMPWM01C::begin(uint8_t PM2_Pin_Select, uint8_t PM10_Pin_Select) 
 {
 	
-	P1_Pin = P1_Pin_Select;
-	P2_Pin = P2_Pin_Select;
+	PM2_Pin = PM2_Pin_Select;
+	PM10_Pin = PM10_Pin_Select;
   
-	pinMode(P1_Pin, INPUT);      
-	pinMode(P2_Pin, INPUT);
+	pinMode(PM2_Pin, INPUT);      
+	pinMode(PM10_Pin, INPUT);
 	
 }
 
 float SMPWM01C::getPM2()
 {
+	float PreviousPM2Concentration = PM2Concentration;
 	
 	LPOTotal = 0;
 	SampleStartTime = millis();
-	SampleDuration = 5000;
+	SampleDuration = 30000;
 
 	while((millis()-SampleStartTime) < SampleDuration)
 	{
-		LPODuration = pulseIn(P1_Pin, LOW);
+		LPODuration = 0;
+		LPODuration = pulseIn(PM2_Pin, LOW, (SampleDuration-(millis()-SampleStartTime))*1000);
 		LPOTotal = LPOTotal+LPODuration;
 	}
 	
-	LPORatio = LPOTotal/(SampleDuration*100); //ratio as integer percentage
-	ConcentrationPM02 = 2.0699*pow(LPORatio,2)+75.123*LPORatio; // using spec sheet curve
+	LPOTotal = LPOTotal/1000;
+	LPORatio = (LPOTotal/SampleDuration)/100; //ratio as a percentage
+	PM2Concentration = -0.1248*pow(LPORatio,3)+6.3746*pow(LPORatio,2)+42.337*LPORatio; // using spec sheet curve
+
+	PM2Concentration = (PreviousPM2Concentration+PM2Concentration*(FILTER_WEIGHT-1.0))/FILTER_WEIGHT;
   
-	return ConcentrationPM02;
+	return PM2Concentration;
+}
+
+float SMPWM01C::getPM10()
+{
+	float PreviousPM10Concentration = PM10Concentration;
+	
+	LPOTotal = 0;
+	SampleStartTime = millis();
+	SampleDuration = 30000;
+
+	while((millis()-SampleStartTime) < SampleDuration)
+	{
+		LPODuration = 0;
+		LPODuration = pulseIn(PM10_Pin, LOW, (SampleDuration-(millis()-SampleStartTime))*1000);
+		LPOTotal = LPOTotal+LPODuration;
+	}
+	
+	LPOTotal = LPOTotal/1000;
+	LPORatio = (LPOTotal/SampleDuration)/100; //ratio as a percentage
+	PM10Concentration = -0.1248*pow(LPORatio,3)+6.3746*pow(LPORatio,2)+42.337*LPORatio; // using spec sheet curve
+	
+	PM10Concentration = (PreviousPM10Concentration+PM10Concentration*(FILTER_WEIGHT-1.0))/FILTER_WEIGHT;
   
+	return PM10Concentration;
 }

@@ -11,39 +11,31 @@
 #define SMPWM01C_h
 #include <Arduino.h>
 
-//#define FILTER_WEIGHT 2.0 //set to 1.0 for no filtering
-//#define SAMPLE_MS 30000ul
+#define FILTER_WEIGHT 2.0 //set to 1.0 for no filtering
 
 class SMPWM01C {
 	
     public:
 		
-		uint8_t P1_Pin;
-		uint8_t P2_Pin;
+		uint8_t PM2_Pin;
+		uint8_t PM10_Pin;
 		
         SMPWM01C();
 		
 		void begin(uint8_t, uint8_t);
 		
 		float getPM2();
-		
-		//float getPM10();
+		float getPM10();
 		
     private:
 		
+		float PM2Concentration;
+		float PM10Concentration;
 		
-		//static int statePM10, statePM02;
-		
-		//static unsigned long startPM10, startPM02; 
-		
-		//static volatile unsigned long lpoPM10, lpoPM02;
-		
-		static float ConcentrationPM10, ConcentrationPM02;
-		
-		unsigned long LPODuration;
-		unsigned long SampleStartTime;
-		unsigned long SampleDuration;	//duration of sampling in milliseconds
-		unsigned long LPOTotal;
+		float LPODuration;
+		float SampleStartTime;
+		float SampleDuration;	//duration of sampling in milliseconds
+		float LPOTotal;
 		float LPORatio;
        
 };
